@@ -4,9 +4,9 @@
 #
 """
 
-Illinois Data Bank Upload.
+Illinois Data Bank Datafile.
 Usage:
-    illinois_data_bank_upload.py [-h] <FILE> <DATASET> <TOKEN> [<SYSTEM>]
+    illinois_data_bank_datafile.py [-h] <FILE> <DATASET> <TOKEN> [<SYSTEM>]
 
 Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu),
 authenticating with TOKEN on SYSTEM, which is the production system by default.
@@ -24,14 +24,13 @@ Options:
 from docopt import docopt
 
 import sys
-import atexit
-import os.path
+import os
 import hashlib
 import requests
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
-    print(arguments)
+    # print(arguments)
 
 chunksize = 2097152
 success_code = 200
@@ -62,11 +61,11 @@ if (arguments["<SYSTEM>"]) != None:
 # generate endpoint from system and dataset
 
 if (system == 'production'):
-    endpoint+="s://databank.illinois.edu/api/dataset/"+dataset_key+"/upload"
+    endpoint+="s://databank.illinois.edu/api/dataset/"+dataset_key+"/datafile"
 elif (system == 'development'):
-    endpoint += "s://rds-dev.library.illinois.edu/api/dataset/" + dataset_key + "/upload"
+    endpoint += "s://rds-dev.library.illinois.edu/api/dataset/" + dataset_key + "/datafile"
 elif (system == 'local'):
-    endpoint += "://localhost:3000/api/dataset/" + dataset_key + "/upload"
+    endpoint += "://localhost:3000/api/dataset/" + dataset_key + "/datafile"
 else:
     # should not be any logical way to get here
     sys.exit('Internal Error, please contact the Research Data Service databank@library.illinois.edu')
@@ -82,11 +81,16 @@ if os.path.isfile(filepath):
     # note: verify=False is only needed for the self-signed certificate on rds-dev
     setup_response = requests.post(endpoint,
                                    headers={'Authorization': 'Token token=' + token},
-                                   data={'filename': filename, 'phase': 'setup'}, verify=False)
+                                   data={'filename': filename, 'phase': 'setup'}, verify=(system == 'development'))
 
     if str(setup_response.status_code) == str(success_code):
         # transfer file in chunks
         with open(filepath, 'rb') as f:
+
+            filesize = os.fstat(f.fileno()).st_size
+            numchunks = (filesize/chunksize) + 1
+            current_chunk = 1
+
             print("calculating checksum ... ")
             checksum = md5(filepath)
             print("transferring file in chunks ... ")
@@ -99,19 +103,23 @@ if os.path.isfile(filepath):
                                                         files={"bytechunk": chunk},
                                                         data={'filename': filename, 'phase': 'transfer',
                                                               'previous_size': previous_size},
-                                                        verify=False)
+                                                        verify=(system == 'development'))
 
-                if str(chunk_transfer_response.status_code) != str(success_code):
+                if str(chunk_transfer_response.status_code) == str(success_code):
+                    print("successfully transferred chunk " + str(current_chunk) + " of " + str(numchunks))
+                else:
                     print("transfer response status:" + str(chunk_transfer_response.status_code))
                     print(chunk_transfer_response.text)
                     break
+
                 chunk = f.read(chunksize)
+                current_chunk+=1
 
         # after file is tranferred, send verify signal, which is required to actually add the file to the dataset
         verification_response = requests.post(endpoint,
                                               headers={'Authorization': 'Token token=' + token},
                                               data={'filename': filename, 'phase': 'verify', 'checksum': checksum},
-                                              verify=False)
+                                              verify=(system == 'development'))
         print("transfer verification status code: " + str(verification_response.status_code))
         print(verification_response.text)
     else:

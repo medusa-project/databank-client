@@ -2,10 +2,10 @@
 
 *Client python script to upload a file to an Illinois Data Bank draft dataset*
 
-  Illinois Data Bank Upload.
+  Illinois Data Bank Datafile.
 
   Usage:
-      illinois_data_bank_upload.py [-h] \<FILE> \<DATASET> \<TOKEN> \[\<SYSTEM>\]
+      illinois_data_bank_datafile.py [-h] \<FILE> \<DATASET> \<TOKEN> \[\<SYSTEM>\]
 
   Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
 
