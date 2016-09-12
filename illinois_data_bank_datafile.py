@@ -22,11 +22,13 @@ Options:
 
 """
 from docopt import docopt
+from math import *
 
 import sys
 import os
 import hashlib
 import requests
+
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
@@ -79,16 +81,21 @@ if os.path.isfile(filepath):
 
     # initiate upload
     # note: verify=False is only needed for the self-signed certificate on rds-dev
-    setup_response = requests.post(endpoint,
-                                   headers={'Authorization': 'Token token=' + token},
-                                   data={'filename': filename, 'phase': 'setup'}, verify=(system == 'development'))
 
-    if str(setup_response.status_code) == str(success_code):
-        # transfer file in chunks
-        with open(filepath, 'rb') as f:
+    with open(filepath, 'rb') as f:
+        filesize = os.fstat(f.fileno()).st_size
 
-            filesize = os.fstat(f.fileno()).st_size
-            numchunks = (filesize/chunksize) + 1
+        setup_response = requests.post(endpoint,
+                                       headers={'Authorization': 'Token token=' + token},
+                                       data={'filename': filename, 'phase': 'setup', 'filesize':filesize},
+                                       verify=(system == 'development'))
+
+        if str(setup_response.status_code) == str(success_code):
+            # transfer file in chunks
+
+            numchunks = (filesize/chunksize)
+            if(filesize % chunksize != 0):
+                numchunks+=1
             current_chunk = 1
 
             print("calculating checksum ... ")
@@ -97,7 +104,7 @@ if os.path.isfile(filepath):
             chunk = f.read(chunksize)
             previous_size = 0
             while chunk:
-                previous_size = previous_size + chunksize
+
                 chunk_transfer_response = requests.post(endpoint,
                                                         headers={'Authorization': 'Token token=' + token},
                                                         files={"bytechunk": chunk},
@@ -106,25 +113,26 @@ if os.path.isfile(filepath):
                                                         verify=(system == 'development'))
 
                 if str(chunk_transfer_response.status_code) == str(success_code):
+                    previous_size = previous_size + chunksize
+                    chunk = f.read(chunksize)
+
                     print("successfully transferred chunk " + str(current_chunk) + " of " + str(numchunks))
+                    current_chunk += 1
                 else:
                     print("transfer response status:" + str(chunk_transfer_response.status_code))
                     print(chunk_transfer_response.text)
                     break
 
-                chunk = f.read(chunksize)
-                current_chunk+=1
-
-        # after file is tranferred, send verify signal, which is required to actually add the file to the dataset
-        verification_response = requests.post(endpoint,
-                                              headers={'Authorization': 'Token token=' + token},
-                                              data={'filename': filename, 'phase': 'verify', 'checksum': checksum},
-                                              verify=(system == 'development'))
-        print("transfer verification status code: " + str(verification_response.status_code))
-        print(verification_response.text)
-    else:
-        print("setup response status: " + str(setup_response.status_code))
-        print(setup_response.text)
+            # after file is tranferred, send verify signal, which is required to actually add the file to the dataset
+            verification_response = requests.post(endpoint,
+                                                  headers={'Authorization': 'Token token=' + token},
+                                                  data={'filename': filename, 'phase': 'verify', 'checksum': checksum},
+                                                  verify=(system == 'development'))
+            print("transfer verification status code: " + str(verification_response.status_code))
+            print(verification_response.text)
+        else:
+            print("setup response status: " + str(setup_response.status_code))
+            print(setup_response.text)
 
 else:
     sys.exit("Unable to find file: %s" % filepath)
