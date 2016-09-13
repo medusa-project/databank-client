@@ -21,8 +21,9 @@ Options:
   -h --help
 
 """
+from __future__ import division
+from __future__ import print_function
 from docopt import docopt
-from math import *
 
 import sys
 import os
@@ -88,12 +89,12 @@ if os.path.isfile(filepath):
         setup_response = requests.post(endpoint,
                                        headers={'Authorization': 'Token token=' + token},
                                        data={'filename': filename, 'phase': 'setup', 'filesize':filesize},
-                                       verify=(system == 'development'))
+                                       verify=(system != "development"))
 
         if str(setup_response.status_code) == str(success_code):
             # transfer file in chunks
 
-            numchunks = (filesize/chunksize)
+            numchunks = (filesize//chunksize)
             if(filesize % chunksize != 0):
                 numchunks+=1
             current_chunk = 1
@@ -110,7 +111,7 @@ if os.path.isfile(filepath):
                                                         files={"bytechunk": chunk},
                                                         data={'filename': filename, 'phase': 'transfer',
                                                               'previous_size': previous_size},
-                                                        verify=(system == 'development'))
+                                                        verify=(system != "development"))
 
                 if str(chunk_transfer_response.status_code) == str(success_code):
                     previous_size = previous_size + chunksize
@@ -127,7 +128,7 @@ if os.path.isfile(filepath):
             verification_response = requests.post(endpoint,
                                                   headers={'Authorization': 'Token token=' + token},
                                                   data={'filename': filename, 'phase': 'verify', 'checksum': checksum},
-                                                  verify=(system == 'development'))
+                                                  verify=(system != "development"))
             print("transfer verification status code: " + str(verification_response.status_code))
             print(verification_response.text)
         else:

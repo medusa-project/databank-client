@@ -5,7 +5,7 @@
   Illinois Data Bank Datafile.
 
   Usage:
-      illinois_data_bank_datafile.py [-h] \<FILE> \<DATASET> \<TOKEN> \[\<SYSTEM>\]
+      python illinois_data_bank_datafile.py [-h] \<FILE> \<DATASET> \<TOKEN> \[\<SYSTEM>\]
 
   Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
 
