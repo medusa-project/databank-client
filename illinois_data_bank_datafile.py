@@ -25,9 +25,11 @@ from __future__ import division
 from __future__ import print_function
 from docopt import docopt
 
+
 import sys
 import os
-import hashlib
+import errno
+
 import requests
 
 
@@ -38,18 +40,77 @@ if __name__ == '__main__':
 chunksize = 2097152
 success_code = 200
 
-def md5(fname):
-    hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(chunksize), b''):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
 filepath = arguments["<FILE>"]
 token = arguments["<TOKEN>"]
 dataset_key = arguments["<DATASET>"]
 system = "production"
 endpoint = "http"
+
+
+def upload_file():
+    # if the FILE argument is a filepath of a file that can be found, try to upload it
+    if os.path.isfile(filepath):
+        # store just the name part of the filepath to pass in post
+        filepath_split = filepath.split('/')
+        filename = filepath_split[-1]
+        print ("uploading " + filename + " ...")
+
+        # initiate upload
+        # note: verify=False is only needed for the self-signed certificate on rds-dev
+
+        with open(filepath, 'rb') as f:
+            filesize = os.fstat(f.fileno()).st_size
+
+            setup_response = requests.post(endpoint,
+                                           headers={'Authorization': 'Token token=' + token},
+                                           data={'filename': filename, 'phase': 'setup', 'filesize':filesize},
+                                           verify=(system != "development"))
+
+            if str(setup_response.status_code) == str(success_code):
+                # transfer file in chunks
+
+                numchunks = (filesize//chunksize)
+                if(filesize % chunksize != 0):
+                    numchunks+=1
+                current_chunk = 1
+
+                print("transferring file in chunks ... ")
+                chunk = f.read(chunksize)
+                previous_size = 0
+                while chunk:
+
+                    chunk_transfer_response = requests.post(endpoint,
+                                                            headers={'Authorization': 'Token token=' + token},
+                                                            files={"bytechunk": chunk},
+                                                            data={'filename': filename, 'phase': 'transfer',
+                                                                  'previous_size': previous_size},
+                                                            verify=(system != "development"))
+
+                    if str(chunk_transfer_response.status_code) == str(success_code):
+                        previous_size = previous_size + chunksize
+                        chunk = f.read(chunksize)
+
+                        print("successfully transferred chunk " + str(current_chunk) + " of " + str(numchunks))
+                        current_chunk += 1
+                    else:
+                        print("transfer response status:" + str(chunk_transfer_response.status_code))
+                        print(chunk_transfer_response.text)
+                        break
+
+                # after file is transferred, send verify signal, which is required to actually add the file to the dataset
+                verification_response = requests.post(endpoint,
+                                                      headers={'Authorization': 'Token token=' + token},
+                                                      data={'filename': filename, 'phase': 'verify', 'checksum': 'not implemented'},
+                                                      verify=(system != "development"))
+                print("transfer verification status code: " + str(verification_response.status_code))
+                print(verification_response.text)
+            else:
+                print("setup response status: " + str(setup_response.status_code))
+                print(setup_response.text)
+
+    else:
+        raise RuntimeError("Unable to find file: %s" % filepath)
+
 
 # If a SYSTEM argument is provided, validate it, otherwise use production as default.
 if (arguments["<SYSTEM>"]) != None:
@@ -73,67 +134,9 @@ else:
     # should not be any logical way to get here
     sys.exit('Internal Error, please contact the Research Data Service databank@library.illinois.edu')
 
-# if the FILE argument is a filepath of a file that can be found, try to upload it
-if os.path.isfile(filepath):
-    # store just the name part of the filepath to pass in post
-    filepath_split = filepath.split('/')
-    filename = filepath_split[-1]
-    print ("uploading " + filename + " ...")
+try:
+    upload_file()
+except Exception as ex:
+    print("Exception: %s" % ex)
 
-    # initiate upload
-    # note: verify=False is only needed for the self-signed certificate on rds-dev
 
-    with open(filepath, 'rb') as f:
-        filesize = os.fstat(f.fileno()).st_size
-
-        setup_response = requests.post(endpoint,
-                                       headers={'Authorization': 'Token token=' + token},
-                                       data={'filename': filename, 'phase': 'setup', 'filesize':filesize},
-                                       verify=(system != "development"))
-
-        if str(setup_response.status_code) == str(success_code):
-            # transfer file in chunks
-
-            numchunks = (filesize//chunksize)
-            if(filesize % chunksize != 0):
-                numchunks+=1
-            current_chunk = 1
-
-            print("calculating checksum ... ")
-            checksum = md5(filepath)
-            print("transferring file in chunks ... ")
-            chunk = f.read(chunksize)
-            previous_size = 0
-            while chunk:
-
-                chunk_transfer_response = requests.post(endpoint,
-                                                        headers={'Authorization': 'Token token=' + token},
-                                                        files={"bytechunk": chunk},
-                                                        data={'filename': filename, 'phase': 'transfer',
-                                                              'previous_size': previous_size},
-                                                        verify=(system != "development"))
-
-                if str(chunk_transfer_response.status_code) == str(success_code):
-                    previous_size = previous_size + chunksize
-                    chunk = f.read(chunksize)
-
-                    print("successfully transferred chunk " + str(current_chunk) + " of " + str(numchunks))
-                    current_chunk += 1
-                else:
-                    print("transfer response status:" + str(chunk_transfer_response.status_code))
-                    print(chunk_transfer_response.text)
-                    break
-
-            # after file is tranferred, send verify signal, which is required to actually add the file to the dataset
-            verification_response = requests.post(endpoint,
-                                                  headers={'Authorization': 'Token token=' + token},
-                                                  data={'filename': filename, 'phase': 'verify', 'checksum': checksum},
-                                                  verify=(system != "development"))
-            print("transfer verification status code: " + str(verification_response.status_code))
-            print(verification_response.text)
-        else:
-            print("setup response status: " + str(setup_response.status_code))
-            print(setup_response.text)
-
-else:
-    sys.exit("Unable to find file: %s" % filepath)
