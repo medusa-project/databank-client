@@ -6,7 +6,7 @@
 
 Illinois Data Bank Datafile.
 Usage:
-    illinois_data_bank_datafile.py [-h] <FILE> <DATASET> <TOKEN> [<SYSTEM>]
+    illinois_data_bank_datafile.py [-h] <DATASET> <TOKEN> <FILE> [<SYSTEM>]
 
 Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu),
 authenticating with TOKEN on SYSTEM, which is the production system by default.
@@ -40,12 +40,11 @@ if __name__ == '__main__':
 chunksize = 2097152
 success_code = 200
 
-filepath = arguments["<FILE>"]
 token = arguments["<TOKEN>"]
 dataset_key = arguments["<DATASET>"]
+filepath = arguments["<FILE>"]
 system = "production"
 endpoint = "http"
-
 
 def upload_file():
     # if the FILE argument is a filepath of a file that can be found, try to upload it
