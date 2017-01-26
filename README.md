@@ -19,10 +19,10 @@ A version of the following usage template command, pre-populated with your datas
 
   Arguments:
     
-    DATASET   dataset identifier, unique and persistent within Illinois Data Bank, obtained on screen opened Get token for command line tools button on the edit screen for a draft dataset  
-    TOKEN     API authentication token, obtained on screen opened Get Token for Command Line Tools button on the edit screen for a draft dataset  
-    SYSTEM    optional system indicator (local | development | production), default is production  
-    FILE      your file to upload
+   DATASET   dataset identifier, unique and persistent within Illinois Data Bank, obtained on screen opened Get token for command line tools button on the edit screen for a draft dataset  
+   TOKEN     API authentication token, obtained on screen opened Get Token for Command Line Tools button on the edit screen for a draft dataset  
+   SYSTEM    optional system indicator (local | development | production), default is production  
+   FILE      your file to upload
 
   Options:
     -h --help
