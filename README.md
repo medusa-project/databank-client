@@ -12,20 +12,20 @@ pip install requests
 pip install urllib3\[secure]
 A version of the following usage template command, pre-populated with your dataset identifier and token, comes up in response to clicking on the Get token for command line tools button when editing a draft dataset.
 
-  Usage:
-      python illinois_data_bank_datafile.py [-h] \<DATASET> \<TOKEN> \[\<SYSTEM>\] \<FILE> 
-
-  Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
-
-  Arguments:
+      Usage:
+          python illinois_data_bank_datafile.py [-h] \<DATASET> \<TOKEN> \[\<SYSTEM>\] \<FILE> 
     
-   DATASET   dataset identifier, unique and persistent within Illinois Data Bank, obtained on screen opened Get token for command line tools button on the edit screen for a draft dataset  
-   TOKEN     API authentication token, obtained on screen opened Get Token for Command Line Tools button on the edit screen for a draft dataset  
-   SYSTEM    optional system indicator (local | development | production), default is production  
-   FILE      your file to upload
-
-  Options:
-    -h --help
+      Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
+    
+      Arguments:
+        
+       DATASET   dataset identifier, unique and persistent within Illinois Data Bank, obtained on screen opened Get token for command line tools button on the edit screen for a draft dataset  
+       TOKEN     API authentication token, obtained on screen opened Get Token for Command Line Tools button on the edit screen for a draft dataset  
+       SYSTEM    optional system indicator (local | development | production), default is production  
+       FILE      your file to upload
+    
+      Options:
+        -h --help
 
 
 **What do we mean by a draft dataset?**
