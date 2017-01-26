@@ -1,19 +1,46 @@
 # databank-client
 
-*Client python script to upload a file to an Illinois Data Bank draft dataset*
+*Sample API client python script to upload a file to an Illinois Data Bank draft dataset*
+https://databank.illinois.edu
 
-  Illinois Data Bank Datafile.
+Requires recent version of python 2 or 3, works on files up to 2 TB.
+
+**Required Modules**
+
+pip install docopt
+pip install requests
+pip install urllib3\[secure]
+A version of the following usage template command, pre-populated with your dataset identifier and token, comes up in response to clicking on the Get token for command line tools button when editing a draft dataset.
 
   Usage:
-      python illinois_data_bank_datafile.py [-h] \<FILE> \<DATASET> \<TOKEN> \[\<SYSTEM>\]
+      python illinois_data_bank_datafile.py [-h] \<DATASET> \<TOKEN> \[\<SYSTEM>\] \<FILE> 
 
   Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
 
   Arguments:
-    FILE      input file
-    DATASET   dataset key, obtained on screen opened by API button on dataset edit screen
-    TOKEN     API token, obtained on screen opened by API button on dataset edit screen
-    SYSTEM    optional system indicator (local | development | production), default is production
+    
+    DATASET   dataset identifier, unique and persistent within Illinois Data Bank, obtained on screen opened Get token for command line tools button on the edit screen for a draft dataset  
+    TOKEN     API authentication token, obtained on screen opened Get Token for Command Line Tools button on the edit screen for a draft dataset  
+    SYSTEM    optional system indicator (local | development | production), default is production  
+    FILE      your file to upload
 
   Options:
     -h --help
+
+
+**What do we mean by a draft dataset?**
+
+A dataset is in a draft state in the Illinois Data Bank after the deposit agreement has been accepted and before the dataset is published or scheduled for publication. Before uploading a file using any of these options, create or find your draft dataset, and navigate to the edit form for that dataset.
+
+**How do I get started?**
+
+At the bottom of the edit screen section for a draft dataset is a matrix of upload options buttons. 
+Click the *Get token for command line tools* button to display required elements for use in command line tools.
+
+Notes:
+
+* A token expires in 3 days, but a new one can be requested using the same method.
+
+* Anyone can use a token to upload a file to this dataset, so keep it secure.
+
+* A distinct token is required for each dataset.
