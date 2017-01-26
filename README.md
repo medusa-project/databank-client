@@ -7,9 +7,10 @@ Requires recent version of python 2 or 3, works on files up to 2 TB.
 
 **Required Modules**
 
-pip install docopt
-pip install requests
-pip install urllib3\[secure]
+    pip install docopt
+    pip install requests
+    pip install urllib3\[secure]
+
 A version of the following usage template command, pre-populated with your dataset identifier and token, comes up in response to clicking on the Get token for command line tools button when editing a draft dataset.
 
       Usage:
