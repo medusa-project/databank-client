@@ -14,7 +14,7 @@ Requires recent version of python 2 or 3, works on files up to 2 TB.
 A version of the following usage template command, pre-populated with your dataset identifier and token, comes up in response to clicking on the *Get token for command line tools* button when editing a draft dataset.
 
       Usage:
-          python databank_api_client_v2.py \<DATASET> \<TOKEN> \<FILE> [\<SYSTEM>] 
+          python databank_api_client_v2.py <DATASET> <TOKEN> <FILE> [<SYSTEM>] 
     
       Upload FILE to an existing draft DATASET created in Illinois Data Bank (https://databank.illinois.edu), authenticating with TOKEN on SYSTEM, which is the production system by default.
     
